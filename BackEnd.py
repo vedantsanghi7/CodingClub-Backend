@@ -49,7 +49,7 @@ args = sys.argv[1:]
 show_all = not args
 
 print("\n--- Log File Analysis Report ---")
-if show_all or '--traffic' in args:
+if show_all or '-traffic' in args:
     print("\nTraffic & Usage Analysis")
     print("-" * 26)
     print(f"Total API Requests Logged: {total_api_requests}")
