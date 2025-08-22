@@ -1,4 +1,6 @@
 import re
+import sys
+import matplotlib.pyplot as plt
 
 total_api_requests = 0
 endpoint_popularity = {}
@@ -6,7 +8,7 @@ http_status_codes = {}
 endpoint_response_times = {}
 unique_user_ids = set()
 user_batch_counts = {'2022': 0, '2023': 0, '2024': 0, '2025': 0}
-timetable_strategy_usage = { 'backtracking': 0, 'iterative': 0}
+timetable_strategy_usage = {'backtracking': 0, 'iterative': 0}
 total_timetables_generated = 0
 generate_call_count = 0
 
@@ -42,46 +44,62 @@ for line in f:
         total_timetables_generated += timetables_found
         generate_call_count += 1
 
+
+args = sys.argv[1:]
+show_all = not args
+
 print("\n--- Log File Analysis Report ---")
-print("\nTraffic & Usage Analysis")
-print("-" * 26)
-print(f"Total API Requests Logged: {total_api_requests}")
-print("\nEndpoint Popularity:")
-for endpoint, count in sorted(endpoint_popularity.items(), key=lambda item: item[1], reverse=True):
-    percentage = (count / total_api_requests) * 100 if total_api_requests > 0 else 0
-    print(f"  {endpoint}: {count} requests ({percentage:.1f}%)")
+if show_all or '--traffic' in args:
+    print("\nTraffic & Usage Analysis")
+    print("-" * 26)
+    print(f"Total API Requests Logged: {total_api_requests}")
 
-print("\nHTTP Status Codes:")
-for code, count in sorted(http_status_codes.items()):
-    print(f"  - {code}: {count} times")
+    print("\nEndpoint Popularity:")
+    for endpoint, count in sorted(endpoint_popularity.items(), key=lambda item: item[1], reverse=True):
+        percentage = (count / total_api_requests) * 100 if total_api_requests > 0 else 0
+        print(f"  {endpoint}: {count} requests ({percentage:.1f}%)")
 
-print("\nPerformance Metrics")
-print("-" * 19)
-for endpoint, times in sorted(endpoint_response_times.items()):
-    if times:
-        average_time = sum(times) / len(times)
-        max_time = max(times)
-        print(f"Endpoint: {endpoint}")
-        print(f"  Average Response Time: {average_time:.2f} ms")
-        print(f"  Max Response Time: {max_time:.2f} ms")
+    print("\nHTTP Status Codes:")
+    for code, count in sorted(http_status_codes.items()):
+        print(f"  - {code}: {count} times")
 
-print("\nApplication-Specific Insights")
-print("-" * 29)
-print("Timetable Generation Strategy Usage:")
-print(f"  Heuristic Backtracking: {timetable_strategy_usage['backtracking']} times")
-print(f"  Iterative Random Sampling: {timetable_strategy_usage['iterative']} times")
+if show_all or '-performance' in args:
+    print("\nPerformance Metrics")
+    print("-" * 19)
+    for endpoint, times in sorted(endpoint_response_times.items()):
+        if times:
+            average_time = sum(times) / len(times)
+            max_time = max(times)
+            print(f"Endpoint: {endpoint}")
+            print(f"  Average Response Time: {average_time:.2f} ms")
+            print(f"  Max Response Time: {max_time:.2f} ms")
 
-avg_timetables = (total_timetables_generated / generate_call_count) if generate_call_count > 0 else 0
-print(f"\nAverage Timetables Found per /generate call: {avg_timetables:.2f}")
-print(f"Total number of timetables generated: {total_timetables_generated}")
+if show_all or '-insights' in args:
+    print("\nApplication-Specific Insights")
+    print("-" * 29)
+    print("Timetable Generation Strategy Usage:")
+    print(f"  Heuristic Backtracking: {timetable_strategy_usage['backtracking']} times")
+    print(f"  Iterative Random Sampling: {timetable_strategy_usage['iterative']} times")
 
-print("\nUnique ID Analysis")
-print("-" * 18)
-print(f"Total Unique IDs found: {len(unique_user_ids)}")
-for year in sorted(user_batch_counts.keys()):
-    year_specific_ids = {uid for uid in unique_user_ids if uid.startswith(f"[{year}")}
-    print(f"  Batch of {year}: {len(year_specific_ids)} unique IDs")
+    avg_timetables = (total_timetables_generated / generate_call_count) if generate_call_count > 0 else 0
+    print(f"\nAverage Timetables Found per /generate call: {avg_timetables:.2f}")
+    print(f"Total number of timetables generated: {total_timetables_generated}")
+
+if show_all or '-users' in args:
+    print("\nUnique ID Analysis")
+    print("-" * 18)
+    print(f"Total Unique IDs found: {len(unique_user_ids)}")
+    for year in sorted(user_batch_counts.keys()):
+        year_specific_ids = {uid for uid in unique_user_ids if uid.startswith(f"[{year}")}
+        print(f"  Batch of {year}: {len(year_specific_ids)} unique IDs")
 print("\n--- End of Report ---\n")
 
-
-
+if show_all or '-visualize' in args:
+    endpoints = [endpoint.lstrip('/') for endpoint in endpoint_popularity.keys()]
+    counts = list(endpoint_popularity.values())
+    plt.figure(figsize=(10, 6))
+    plt.bar(endpoints, counts, color='blue')
+    plt.xlabel('Endpoint')
+    plt.ylabel('Number of Requests')
+    plt.title('Endpoint Popularity')
+    plt.show()
